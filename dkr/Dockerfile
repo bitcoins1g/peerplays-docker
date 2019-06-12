@@ -2,7 +2,7 @@ FROM ubuntu:16.04 as ppy-builder
 MAINTAINER PeerPlays Witnesses
 
 ARG BRANCH_NAME=beatrice
-ARG COMMIT=3e58dc5a1120420b64cbbee51b3d9e02c624215c
+ARG COMMIT=60afddefd594e860a712aa8ccfe86f1f9db25901
 
 RUN \
         apt-get update && \
@@ -21,13 +21,14 @@ RUN \
           libcurl4-openssl-dev \
           python-dev \
           doxygen \
+          ntp \
           wget \
         && \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN \
-    git clone https://github.com/PBSA/peerplays.git /source  && \
+    git clone https://github.com/peerplays-network/peerplays.git /source  && \
     cd /source && git checkout ${BRANCH_NAME} && \
     git submodule update --init --recursive
 
@@ -38,6 +39,13 @@ RUN rm genesis.json
 ADD genesis.json .
 
 RUN \
+    BOOST_ROOT=$HOME/opt/boost_1_60_0 && \
+    wget -c 'http://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz/download' -O boost_1_60_0.tar.gz &&\
+    tar -zxvf boost_1_60_0.tar.gz && \
+    cd boost_1_60_0/ && \
+    ./bootstrap.sh "--prefix=$BOOST_ROOT" && \
+    ./b2 install -j$(nproc) && \
+    cd .. && \
     mkdir build && cd build && \
     cmake \
         -DCMAKE_BUILD_TYPE=Release \
@@ -45,7 +53,7 @@ RUN \
      && \
      make -j4 && \
      make install && \
-     git rev-parse --short HEAD > /version && \
+     git rev-parse --short HEAD > /etc/peerplays && \
      cd / && \
      rm -rf /tmp/* /source
 
