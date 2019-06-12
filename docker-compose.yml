@@ -1,6 +1,17 @@
 version: '3'
 services:
 
+ nginx:
+  #
+  # nginx
+  # =========
+  #
+  # This service can be used as a reverse proxy for an API node
+  #
+  build: nginx-dir/
+  ports:
+   - "0.0.0.0:443:8080"
+
  seed:
   #
   # Seed Node
